@@ -166,6 +166,7 @@ pub struct Engine {
     nav_tries: u32,
     esc_backouts: u32,
     lobby_yellow_since: Option<Instant>,
+    hud_gone_since: Option<Instant>,
     // recovery, sleep mode, anti-AFK movement
     recoveries: u32,
     sleep_last: Option<Instant>,
@@ -226,6 +227,7 @@ impl Engine {
             nav_tries: 0,
             esc_backouts: 0,
             lobby_yellow_since: None,
+            hud_gone_since: None,
             recoveries: 0,
             sleep_last: None,
             anti_afk: cfg_anti_afk,
@@ -550,6 +552,23 @@ impl Engine {
 
     fn advance(&mut self, raw: Raw, obs: &Observation, win: &GameWindow) -> String {
         let now = Instant::now();
+        // In a match an unclear frame (storm flash, emote wheel, map, a
+        // window on top) is not the end of it: keep treating it as the match
+        // until the HUD has been gone for a while or another screen is
+        // positively recognised. Our own health bar alone also keeps it.
+        let raw = if raw == Raw::Hud || (self.in_match && obs.health_bar && matches!(raw, Raw::Unknown | Raw::Loading)) {
+            self.hud_gone_since = None;
+            Raw::Hud
+        } else if self.in_match && matches!(raw, Raw::Unknown | Raw::Loading) {
+            let since = *self.hud_gone_since.get_or_insert(now);
+            if since.elapsed().as_secs() < self.cfg.hud_loss_grace_s {
+                Raw::Hud
+            } else {
+                raw
+            }
+        } else {
+            raw
+        };
         let mut lost_hud = false;
         let display;
         let status;
@@ -686,7 +705,10 @@ impl Engine {
                         status = "Выход из матча / загрузка лобби".into();
                         // Elimination screen waits for CONTINUE; press it if
                         // nothing else shows up for a while.
+                        // Never while our own health bar is visible: that is
+                        // still a match, and the click would hit the inventory.
                         if raw == Raw::Unknown
+                            && !obs.health_bar
                             && self.post_match_since.map_or(false, |t| t.elapsed().as_secs() >= self.cfg.continue_after_s)
                             && self.last_continue.map_or(true, |t| t.elapsed().as_secs() >= 10)
                             && self.continue_clicks < 3

@@ -93,6 +93,8 @@ pub struct Observation {
     pub hero_br: f32,
     /// Lobby button is yellow (whether or not it looks idle).
     pub button_yellow: bool,
+    /// Our own health bar is on screen (left edge, bottom): we are in a match.
+    pub health_bar: bool,
     /// Grayscale patch of the button region (for stability checks).
     pub button_patch: Vec<f32>,
     /// Same for the PLAY AGAIN button of the recap screen.
@@ -250,6 +252,7 @@ impl Vision {
         let btn = hsv_stats(f, c.button_roi);
         let hud = hsv_stats(f, c.hud_roi);
         let map = hsv_stats(f, c.minimap_roi);
+        let anchor = hsv_stats(f, c.health_anchor_roi);
         let again = hsv_stats(f, c.play_again_roi);
         let whole = hsv_stats(f, Roi::FULL);
 
@@ -292,11 +295,17 @@ impl Vision {
         // A search is recognised by the button changing after our press (in
         // the engine) or by a captured "searching" template.
         let searching_h = Det::default();
-        // Own bars (bottom-left) + minimap (water around the island).
+        // Own bars (bottom-left), confirmed either by the minimap (water around
+        // the island) or by the health bar starting at the very left edge.
+        // The killer's bars on the elimination screen sit further right and
+        // there is no minimap, so neither confirmation fires there; the
+        // anchor keeps working when the storm covers the minimap water or a
+        // window overlaps the minimap.
+        let health_bar = anchor.green >= 0.35;
         let hud_h = Det {
             hit: hud.green >= c.hud_green_fraction
                 && (hud.blue >= c.hud_blue_fraction || hud.green >= c.hud_green_fraction * 3.0)
-                && map.blue >= c.minimap_blue_fraction,
+                && (map.blue >= c.minimap_blue_fraction || health_bar),
             score: ((hud.green + hud.blue) / (c.hud_green_fraction * 2.0)).min(1.0) * 0.99,
             template: false,
         };
@@ -308,14 +317,21 @@ impl Vision {
         };
         let loading_h = Det { hit: whole.luma < c.black_luma, score: 1.0 - whole.luma, template: false };
 
-        let ready = self.by_template(f, Sig::Ready).unwrap_or(ready_h);
+        // A captured template can only add a detection, never veto the
+        // built-in check: a template taken on a slightly different frame
+        // (other health, storm tint) must not end a running match.
+        let either = |s: Sig, h: Det| match self.by_template(f, s) {
+            Some(t) if t.hit => t,
+            _ => h,
+        };
+        let ready = either(Sig::Ready, ready_h);
         let searching = self.by_template(f, Sig::Searching).unwrap_or(searching_h);
-        let hud = self.by_template(f, Sig::Hud).unwrap_or(hud_h);
-        let results = self.by_template(f, Sig::Results).unwrap_or(results_h);
-        let loading = self.by_template(f, Sig::Loading).unwrap_or(loading_h);
-        // Without a lobby template the lobby counts as loaded once a lobby
-        // button (Ready / Searching) is on screen.
-        let lobby = self.by_template(f, Sig::Lobby).unwrap_or(Det {
+        let hud = either(Sig::Hud, hud_h);
+        let results = either(Sig::Results, results_h);
+        let loading = either(Sig::Loading, loading_h);
+        // The lobby counts as loaded once a lobby button (Ready / Searching)
+        // is on screen, or its template matches.
+        let lobby = either(Sig::Lobby, Det {
             hit: ready.hit || searching.hit,
             score: ready.score.max(searching.score),
             template: false,
@@ -339,6 +355,7 @@ impl Vision {
             fill_on,
             hero_br,
             button_yellow: btn.yellow >= c.yellow_fraction_ready,
+            health_bar: health_bar && !dark,
             button_patch: crop_gray(f, c.button_roi, TW, TH),
             play_again_patch: crop_gray(f, c.play_again_roi, TW, TH),
             mean_luma: whole.luma,
@@ -660,6 +677,8 @@ mod tests {
             ("10.webp", None, Raw::Ready),
             // Sleep mode (phone photo: game area without the black bars).
             ("11.png", Some((0, 200, 335, 290)), Raw::Sleep),
+            // Match in the storm with the NOVA AFK window over the minimap.
+            ("13.webp", None, Raw::Hud),
         ];
         for (name, crop, want) in shots {
             let Some(f) = shot(name) else { continue };
@@ -670,6 +689,9 @@ mod tests {
             let o = v.observe(&f);
             println!("{name}: {:?} {}", o.classify(), o.summary());
             assert_eq!(o.classify(), want, "{name}");
+            if want == Raw::Hud {
+                assert!(o.health_bar, "{name}: own health bar");
+            }
             if want == Raw::Sleep {
                 // KEEP PLAYING is horizontally centred, under the title.
                 let (x, _) = o.sleep_button.unwrap();

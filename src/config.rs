@@ -24,7 +24,7 @@ impl Roi {
 }
 
 /// Bumped whenever default regions change; an older file is replaced.
-pub const CONFIG_VERSION: u32 = 7;
+pub const CONFIG_VERSION: u32 = 8;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(default)]
@@ -35,6 +35,8 @@ pub struct Config {
     pub button_roi: Roi,
     /// Health / shield bars of the in-match HUD (bottom-left).
     pub hud_roi: Roi,
+    /// Left end of our own health bar: green whenever we are in a match.
+    pub health_anchor_roi: Roi,
     /// Minimap (top-right): required together with the bars, so the
     /// killer's bars on the elimination screen do not count as our HUD.
     pub minimap_roi: Roi,
@@ -115,6 +117,9 @@ pub struct Config {
     /// After the HUD is gone and nothing known is on screen for this long,
     /// press CONTINUE on the elimination screen.
     pub continue_after_s: u64,
+    /// The match HUD must stay gone this long before the match counts as
+    /// left (it blinks out for a moment on storm flashes, emotes, map...).
+    pub hud_loss_grace_s: u64,
     /// The recap screen slides in and ignores clicks for a moment: press
     /// PLAY AGAIN only after it has been on screen this long.
     pub results_settle_s: u64,
@@ -135,6 +140,8 @@ impl Default for Config {
             button_roi: Roi::new(0.055, 0.812, 0.16, 0.065),
             // Shield + health bars at x 63..368, y 962..1020.
             hud_roi: Roi::new(0.03, 0.885, 0.17, 0.07),
+            // Left end of the health bar (x 63.., y 987..1020 at 1080p).
+            health_anchor_roi: Roi::new(0.036, 0.917, 0.04, 0.024),
             minimap_roi: Roi::new(0.87, 0.03, 0.11, 0.2),
             results_roi: Roi::new(0.25, 0.04, 0.50, 0.18),
             play_again_roi: Roi::new(0.735, 0.46, 0.23, 0.055),
@@ -172,7 +179,8 @@ impl Default for Config {
             ready_stable_needed: 4,
             ready_stable_diff: 0.04,
             click_verify_timeout_s: 8,
-            continue_after_s: 10,
+            continue_after_s: 15,
+            hud_loss_grace_s: 4,
             results_settle_s: 4,
             max_click_retries: 3,
             rearm_after_s: 12,

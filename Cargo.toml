@@ -1,6 +1,6 @@
 [package]
 name = "nova_afk"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 description = "NOVA AFK - screen-recognition AFK helper for Fortnite on Windows: auto re-queue, Team Fill check, sleep-mode wake-up, anti-AFK movement"
 license = "MIT"
