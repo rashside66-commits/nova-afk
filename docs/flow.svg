@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8a8a8a"/>
+    </marker>
+    <marker id="arrY" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#e6c93a"/>
+    </marker>
+    <style>
+      .box { fill: #141414; stroke: #2e2e2e; stroke-width: 1.5; }
+      .key { fill: #1a1708; stroke: #e6c93a; stroke-width: 1.5; }
+      .side { fill: #101418; stroke: #34506a; stroke-width: 1.5; }
+      .t { font-family: Segoe UI, Inter, Arial, sans-serif; font-size: 18px; fill: #ececec; font-weight: 600; }
+      .s { font-family: Segoe UI, Inter, Arial, sans-serif; font-size: 14px; fill: #9a9a9a; }
+      .a { stroke: #8a8a8a; stroke-width: 2; fill: none; marker-end: url(#arr); }
+      .ay { stroke: #e6c93a; stroke-width: 2; fill: none; marker-end: url(#arrY); }
+      .ad { stroke: #5b7a96; stroke-width: 2; fill: none; stroke-dasharray: 6 5; marker-end: url(#arr); }
+    </style>
+  </defs>
+
+  <rect width="1200" height="520" rx="16" fill="#0a0a0a"/>
+  <text x="40" y="52" class="t" style="font-size:22px">Цикл NOVA AFK</text>
+  <text x="40" y="76" class="s">каждое состояние подтверждается по 3 из 5 кадров · на каждую кнопку — одно нажатие с проверкой</text>
+
+  <!-- top row -->
+  <rect x="40" y="110" width="220" height="86" rx="12" class="key"/>
+  <text x="150" y="146" text-anchor="middle" class="t">Идёт матч</text>
+  <text x="150" y="172" text-anchor="middle" class="s">бег · прыжки · кирка</text>
+
+  <rect x="340" y="110" width="220" height="86" rx="12" class="box"/>
+  <text x="450" y="146" text-anchor="middle" class="t">Матч завершён</text>
+  <text x="450" y="172" text-anchor="middle" class="s">экран смерти → CONTINUE</text>
+
+  <rect x="640" y="110" width="220" height="86" rx="12" class="box"/>
+  <text x="750" y="146" text-anchor="middle" class="t">Итоги матча</text>
+  <text x="750" y="172" text-anchor="middle" class="s">PLAY AGAIN</text>
+
+  <rect x="940" y="110" width="220" height="86" rx="12" class="box"/>
+  <text x="1050" y="146" text-anchor="middle" class="t">Лобби</text>
+  <text x="1050" y="172" text-anchor="middle" class="s">ждёт, пока всё загрузится</text>
+
+  <!-- bottom row -->
+  <rect x="940" y="270" width="220" height="86" rx="12" class="box"/>
+  <text x="1050" y="306" text-anchor="middle" class="t">Проверка Fill</text>
+  <text x="1050" y="332" text-anchor="middle" class="s">Team Fill → жёлтый</text>
+
+  <rect x="640" y="270" width="220" height="86" rx="12" class="key"/>
+  <text x="750" y="306" text-anchor="middle" class="t">Старт поиска</text>
+  <text x="750" y="332" text-anchor="middle" class="s">клавиша P · один раз</text>
+
+  <rect x="340" y="270" width="220" height="86" rx="12" class="box"/>
+  <text x="450" y="306" text-anchor="middle" class="t">Поиск матча</text>
+  <text x="450" y="332" text-anchor="middle" class="s">повторных нажатий нет</text>
+
+  <rect x="40" y="270" width="220" height="86" rx="12" class="box"/>
+  <text x="150" y="306" text-anchor="middle" class="t">Загрузка катки</text>
+  <text x="150" y="332" text-anchor="middle" class="s">ожидание HUD</text>
+
+  <!-- main arrows -->
+  <path d="M260 153 H336" class="a"/>
+  <path d="M560 153 H636" class="a"/>
+  <path d="M860 153 H936" class="a"/>
+  <path d="M1050 196 V266" class="a"/>
+  <path d="M940 313 H864" class="a"/>
+  <path d="M640 313 H564" class="a"/>
+  <path d="M340 313 H264" class="a"/>
+  <path d="M150 270 V200" class="ay"/>
+
+  <!-- PLAY AGAIN shortcut -->
+  <path d="M750 196 C 750 230, 520 236, 470 266" class="ay"/>
+  <text x="605" y="224" text-anchor="end" class="s" style="fill:#c9b23a">PLAY AGAIN сразу ищет матч</text>
+
+  <!-- side screens -->
+  <rect x="40" y="410" width="340" height="74" rx="12" class="side"/>
+  <text x="62" y="442" class="t">Меню режимов</text>
+  <text x="62" y="466" class="s">находит плитку Battle Royale → PLAY</text>
+
+  <rect x="430" y="410" width="340" height="74" rx="12" class="side"/>
+  <text x="452" y="442" class="t">Спящий режим</text>
+  <text x="452" y="466" class="s">KEEP PLAYING → продолжение с того же шага</text>
+
+  <rect x="820" y="410" width="340" height="74" rx="12" class="side"/>
+  <text x="842" y="442" class="t">Нет прогресса 5 мин</text>
+  <text x="842" y="466" class="s">сброс цикла · пауза после 3 попыток</text>
+
+  <path d="M210 410 C 260 380, 960 380, 1000 360" class="ad"/>
+</svg>

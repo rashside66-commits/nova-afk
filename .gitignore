@@ -1,0 +1,6 @@
+/target
+
+# Created next to the exe at runtime
+nova_afk.json
+nova_afk.log
+templates/
